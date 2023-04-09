@@ -1,0 +1,300 @@
+---
+title: "Project Two-JMM622-O"
+author: "Yuri Souza"
+date: "2023-04-08"
+output: html_document
+---
+
+#### packages
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+if(!require(tidyverse))install.packages("tidyverse", dependencies = TRUE)
+
+```
+
+#### Ants data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+ants <- read_csv("00_data/raw/ants.csv")
+
+ants_pub_year <- ants %>% 
+  dplyr::filter(Source.Data == "published manuscript") %>% 
+  dplyr::distinct(Source.Citation) %>% 
+  dplyr::mutate(publised_year = gsub(".*?([0-9]+).*", "\\1", Source.Citation)) %>% 
+  dplyr::group_by(Source.Citation, publised_year) %>% 
+  dplyr::distinct(Source.Citation) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(publised_year) %>% 
+  summarize(total_p = n()) %>% 
+  drop_na()
+
+
+ants_spp_year <- ants %>% 
+  dplyr::filter(Source.Data == "published manuscript") %>% 
+  dplyr::select(Species, Genus, Source.Citation) %>% 
+  tidyr::unite(Species, Genus, Species, sep = " ", remove = TRUE) %>% 
+  dplyr::mutate(publised_year = gsub(".*?([0-9]+).*", "\\1", Source.Citation)) %>% 
+  dplyr::select(!2) %>% 
+  dplyr::group_by(Species, publised_year) %>% 
+  dplyr::distinct() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n()) %>% 
+  dplyr::ungroup() %>% 
+  drop_na()
+  
+  
+#join_ant_spp_year <- dplyr::left_join(ants_spp_year, ants_pub_year) %>% 
+#  drop_na() %>% 
+#  write_csv("00_data/ants.csv")
+
+
+```
+
+#### Butterflies data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+butterflies_paper <- read_csv("00_data/raw/ATLANTIC_BUTTERFLIES_references.csv") %>%   
+  dplyr::filter(Type == "Article") %>% 
+  dplyr::select(sites_ID, References) %>% 
+  dplyr::mutate(publised_year = gsub(".*?([0-9]+).*", "\\1", References)) %>% 
+  dplyr::select(!2)
+
+butterflies_paper_count <- butterflies_paper %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+butterflies_spp <- read_csv2("00_data/raw/ATLANTIC_BUTTERFLIES_species.csv") %>% 
+  dplyr::select(sites_ID, Species) %>% 
+  dplyr::left_join(butterflies_paper) %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  distinct() %>% 
+  dplyr::summarize(total_s = n()) %>% 
+  dplyr::ungroup() %>% 
+  drop_na()
+  
+  
+#join_butterflies_spp_year <- dplyr::left_join(butterflies_spp, butterflies_paper_count) %>%
+#  write_csv("00_data/butterflies.csv")
+
+
+```
+
+#### Bats data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+bats_paper <- read_csv("00_data/raw/ATLANTIC_BATS_Reference.csv") %>%   
+  dplyr::filter(Type == "Article") %>% 
+  dplyr::select(ID, References) %>% 
+  dplyr::mutate(publised_year = gsub(".*?([0-9]+).*", "\\1", References)) %>% 
+  dplyr::select(!2)
+
+bats_paper_count <- bats_paper %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+
+bats_spp <- read_csv("00_data/raw/ATLANTIC_Bats_Capture.csv") %>% 
+  filter(Capture_number > 0) %>% 
+  dplyr::left_join(bats_paper) %>% 
+  dplyr::select(Species, publised_year) %>% 
+  drop_na() %>% 
+  dplyr::group_by(Species, publised_year) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n())
+
+#join_bats_spp_year <- dplyr::left_join(bats_spp, bats_paper_count) %>% write_csv("00_data/bats.csv")
+
+
+```
+
+
+#### Primates data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+
+primates_paper <- read_csv("00_data/raw/ATLANTIC-PR_References.csv") %>% 
+  dplyr::select(REF_ID, Referece) %>% 
+  dplyr::mutate(publised_year = as.numeric(gsub(".*?([0-9]+).*", "\\1", Referece))) %>% 
+  dplyr::filter(publised_year > 1000) %>% 
+  dplyr::mutate(publised_year = as.character(publised_year)) %>% 
+  dplyr::select(!2)
+
+primates_paper_count <- primates_paper %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+
+primates_spp <- read_csv2("00_data/raw/ATLANTIC-PR_Community.csv") %>% 
+  dplyr::left_join(primates_paper) %>% 
+  drop_na(publised_year) %>% 
+  dplyr::select(SPECIES, publised_year) %>% 
+  drop_na() %>% 
+  dplyr::group_by(SPECIES, publised_year) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n())
+
+#join_primates_spp_year <- dplyr::left_join(primates_spp, primates_paper_count) %>% write_csv("00_data/primates.csv")
+
+
+```
+#### Amphibians data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+
+amphibians_paper <- read_csv("00_data/raw/ATLANTIC_AMPHIBIANS_references.csv") %>% 
+  dplyr::filter(reference_type == "a") %>% 
+  dplyr::select(reference_number, citation) %>% 
+  dplyr::mutate(publised_year = as.numeric(gsub(".*?([0-9]+).*", "\\1", citation)),
+                reference_number = as.character(reference_number)) %>% 
+  dplyr::select(!2)
+
+amphibians_paper_count <- amphibians_paper %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+
+amphibians_spp <- read_csv("00_data/raw/ATLANTIC_AMPHIBIANS_species.csv") %>% 
+  dplyr::select(c(1,8)) %>% 
+  drop_na() %>% 
+  dplyr::mutate(id = str_remove(id, "amp")) %>% 
+  dplyr::rename(reference_number = id,
+                Species = valid_name) %>% 
+  dplyr::left_join(amphibians_paper) %>% 
+  dplyr::select(Species, publised_year) %>% 
+  drop_na() %>% 
+  dplyr::group_by(Species, publised_year) %>% 
+  distinct() %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n())
+
+join_amphibians_spp_year <- dplyr::left_join(amphibians_spp, amphibians_paper_count) %>% write_csv("00_data/amphibians.csv")
+
+
+```
+#### Small Mammals data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+
+smallmammals_paper <- read_csv("00_data/raw/ATLANTIC_SM_Reference.csv") %>% 
+  dplyr::filter(reference_type == "Article") %>% 
+  dplyr::select(!3) %>% 
+  dplyr::mutate(publised_year = as.character(publised_year))
+
+smallmammals_paper_count <- smallmammals_paper %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+
+smallmammals_spp <- read_csv("00_data/raw/ATLANTIC_SM_capture.csv") %>% 
+  dplyr::select(c(1,17)) %>% 
+  drop_na() %>% 
+  dplyr::left_join(smallmammals_paper) %>% 
+  dplyr::select(Actual_species_name, publised_year) %>% 
+  drop_na() %>% 
+  dplyr::group_by(Actual_species_name, publised_year) %>% 
+  distinct() %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n())
+
+join_smallmammals_spp_year <- dplyr::left_join(smallmammals_spp, smallmammals_paper_count) %>% write_csv("00_data/smallmammals.csv")
+
+
+```
+
+#### Birds data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+
+birds_spp <- read_csv("00_data/raw/ATLANTIC_birds.csv") %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(Species, publised_year) %>% 
+  dplyr::distinct() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n()) %>% 
+  dplyr::ungroup()
+
+
+
+birds_paper_count <- read_csv("00_data/raw/ATLANTIC_birds.csv") %>% 
+  dplyr::select(!3) %>% 
+  dplyr::group_by(Main_researcher, publised_year) %>% 
+  dplyr::distinct() %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(publised_year) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+
+join_birds_spp_year <- dplyr::left_join(birds_spp, birds_paper_count) %>% write_csv("00_data/birds.csv")
+
+
+```
+#### Medium and Large Mammals data
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+
+mlmammals_spp <- read_csv("00_data/raw/ATLANTIC_ML_mammals.csv") %>% 
+  dplyr::select(!1) %>% 
+  dplyr::group_by(Species, publised_year) %>% 
+  dplyr::distinct() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(1) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_s = n()) %>% 
+  dplyr::ungroup()
+
+
+
+mlmammals_paper_count <- read_csv("00_data/raw/ATLANTIC_ML_mammals.csv") %>% 
+  dplyr::select(!3) %>% 
+  dplyr::group_by(Reference, publised_year) %>% 
+  dplyr::distinct() %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(publised_year) %>% 
+  dplyr::group_by(publised_year) %>% 
+  dplyr::summarize(total_p = n()) %>% 
+  dplyr::ungroup()
+
+
+join_mlmammals_spp_year <- dplyr::left_join(mlmammals_spp, mlmammals_paper_count) %>% write_csv("00_data/mlmammals.csv")
+
+
+```
+#### joining tables
+```{r, echo=TRUE, message = FALSE, include=TRUE}
+
+
+all_data <- rbind(join_ant_spp_year, join_butterflies_spp_year, join_amphibians_spp_year, join_smallmammals_spp_year, join_birds_spp_year, join_mlmammals_spp_year) %>% 
+  group_by(publised_year) %>% 
+  summarise(total_s = sum(total_s),
+            total_p = sum(total_p)) %>% 
+  write_csv("00_data/total_data_summed.csv")
+  
+
+
+```

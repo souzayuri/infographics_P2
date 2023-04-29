@@ -1,58 +1,69 @@
 ---
 title: "Project Two-JMM622-O"
 author: "Yuri Souza"
-date: "2023-04-08"
-output: html_document
+date: "2023-04-30"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
+# **This file contains the workflow I used for the Atlantic forest project**
+
+\pagebreak
+
+# **First Version**
+
+I choose to work with Atlantic Forest and the relationship of numbers of peer reviewed papers and the number of species. I picked up this topic because over time i have seen that some species have received more attention than others. Everything I used here is also available on my [*GitHub*](https://github.com/souzayuri/infographics_P2).
+
+**Version 1.** Since the beginning, I wanted to create this infographic using more stylish, trying to show my data as it was a tree. The reason was to get more attention to the topic beyond the use of charts and graphics.I first started by creating a sketch of the size and the number of boxes that I would like to include using a landscape infographic.
+
+\pagebreak
+
+But then I realized the long orientation would work better. Then, I got the data using the Datapapers published in the scientific [*Ecology*](https://esajournals.onlinelibrary.wiley.com/doi/toc/10.1002/(ISSN)1939-9170.AtlanticPapers) journal. These Datapapers contain all the available data about specific species. For the purpose of this project, I decided to use only the published data due to their robustness and integrity. I tried to create a tree using the *canopy* to represent the loss of the forest cover by the Brazilian state using a **bubble chart**. Under this chart, I put a **heat map chart** relating the number of published papers per year since the first published paper. The reason I chose this chart was totally based on design. I wanted something to represent the *trunk* of the tree. I knew that there would have a pattern from more papers being published recently than in the past, so I used the brown color as the one to represent years with few publications. Thus, I could use this color to start the *root* part of the tree. For the *root* part, I used the **Sankey diagram chart** with the purpose of splitting the published papers into the number of publications per group of animals and the number of recorded species by these papers per year. My idea was to show that the organisms diversity is the root of the *tropical forest*. By using the **Sankey diagram**, I wanted to show that some species have been studied more than others and that there was a relationship between the number of studies and the number of species recorded by year. Basically, the more work we do, the more species we record. For small animal groups, it seems that we haven't reached the S-Curve or the expected number of species. I used **linear charts** to represent the number of published papers and the recorded species over time, linking it to their respective *Sankey curve*.
+\pagebreak
+
+**Version 2.**
+
+In the second version, I changed the canopy **bubble chart** to a **donut chart** showing the deforestation of the Atlantic forest. I also created vectors for each group I show in the **linear chart**. To make my tree more suitable, I included branches to make it more attractive and suitable. I used the branches to include boxes of information about the forest.
+I also added a *map* of the Atlantic forest covering the whole background of the infographic.
+
+\pagebreak
+
+**Version 3.**
+
+In version three, I removed the background *map* and put it in the middle of the **donut chart** with more information about other biomes in Brazil. Since the boxes around the texts in the branches looked weird, I removed them and left only the text. I also removed the background color and added some labels to make the charts more readable.
+
+I changed the canopy **bubble chart** to a **donut chart** showing the deforestation of the Atlantic forest. I created vectors for each group I show in the **linear chart**. To make my tree more suitable, I included branches to make it more attractive and suitable. I used the branches to include boxes of information about the forest.
+I also added a map of the Atlantic forest covering the whole background of the infographic.
+
+\pagebreak
+
+**Version 4.**
+
+In this last version, I didn't make many significant changes. I just changed some colors of the animal vectors, played with the graph names to make them clearer, and changed the size of the graph title.
+
+\pagebreak
+
+**Personal thoughts and learning from this project**
+
+After watching the last speaker's talk, I tried to use data and art together. We always used to see human impacts in forests through charts such as **linear** or **bar charts** but did not integrate the complexity and relations of this information to the whole. Sometimes we might believe we are too familiar with these charts that we don't need to pay attention.
+
+So, I made this infographic using different charts to create something more "alive" and informative. Something that someone could admire while learning. I also think that incorporating the **Sankey chart** with the **linear charts** make us wonder that charts displaying absolute information might hide important information that temporal charts can capture. 
+
+By looking at these charts, we can see something defined in the ecology field as a "*Cute species*", species that have an emotional impact on humans, such as primate species (the species more related to humans origin). Furthermore, primates were the group with more studies over time.
+
+\pagebreak
+
 #### packages
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = FALSE, include=TRUE}
 
 if(!require(tidyverse))install.packages("tidyverse", dependencies = TRUE)
 
 ```
 
-#### Ants data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
-
-ants <- read_csv("00_data/raw/ants.csv")
-
-ants_pub_year <- ants %>% 
-  dplyr::filter(Source.Data == "published manuscript") %>% 
-  dplyr::distinct(Source.Citation) %>% 
-  dplyr::mutate(publised_year = gsub(".*?([0-9]+).*", "\\1", Source.Citation)) %>% 
-  dplyr::group_by(Source.Citation, publised_year) %>% 
-  dplyr::distinct(Source.Citation) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::group_by(publised_year) %>% 
-  summarize(total_p = n()) %>% 
-  drop_na()
-
-
-ants_spp_year <- ants %>% 
-  dplyr::filter(Source.Data == "published manuscript") %>% 
-  dplyr::select(Species, Genus, Source.Citation) %>% 
-  tidyr::unite(Species, Genus, Species, sep = " ", remove = TRUE) %>% 
-  dplyr::mutate(publised_year = gsub(".*?([0-9]+).*", "\\1", Source.Citation)) %>% 
-  dplyr::select(!2) %>% 
-  dplyr::group_by(Species, publised_year) %>% 
-  dplyr::distinct() %>% 
-  dplyr::ungroup() %>% 
-  dplyr::group_by(publised_year) %>% 
-  dplyr::summarize(total_s = n()) %>% 
-  dplyr::ungroup() %>% 
-  drop_na()
-  
-  
-#join_ant_spp_year <- dplyr::left_join(ants_spp_year, ants_pub_year) %>% 
-#  drop_na() %>% 
-#  write_csv("00_data/ants.csv")
-
-
-```
 
 #### Butterflies data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 butterflies_paper <- read_csv("00_data/raw/ATLANTIC_BUTTERFLIES_references.csv") %>%   
   dplyr::filter(Type == "Article") %>% 
@@ -77,14 +88,14 @@ butterflies_spp <- read_csv2("00_data/raw/ATLANTIC_BUTTERFLIES_species.csv") %>%
   drop_na()
   
   
-#join_butterflies_spp_year <- dplyr::left_join(butterflies_spp, butterflies_paper_count) %>%
-#  write_csv("00_data/butterflies.csv")
-
+join_butterflies_spp_year <- dplyr::left_join(butterflies_spp, butterflies_paper_count) %>%
+  write_csv("00_data/butterflies.csv")
+join_butterflies_spp_year
 
 ```
 
 #### Bats data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 bats_paper <- read_csv("00_data/raw/ATLANTIC_BATS_Reference.csv") %>%   
   dplyr::filter(Type == "Article") %>% 
@@ -118,7 +129,7 @@ bats_spp <- read_csv("00_data/raw/ATLANTIC_Bats_Capture.csv") %>%
 
 
 #### Primates data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 
 primates_paper <- read_csv("00_data/raw/ATLANTIC-PR_References.csv") %>% 
@@ -152,7 +163,7 @@ primates_spp <- read_csv2("00_data/raw/ATLANTIC-PR_Community.csv") %>%
 
 ```
 #### Amphibians data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 
 amphibians_paper <- read_csv("00_data/raw/ATLANTIC_AMPHIBIANS_references.csv") %>% 
@@ -189,7 +200,7 @@ join_amphibians_spp_year <- dplyr::left_join(amphibians_spp, amphibians_paper_co
 
 ```
 #### Small Mammals data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 
 smallmammals_paper <- read_csv("00_data/raw/ATLANTIC_SM_Reference.csv") %>% 
@@ -222,7 +233,7 @@ join_smallmammals_spp_year <- dplyr::left_join(smallmammals_spp, smallmammals_pa
 ```
 
 #### Birds data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 
 birds_spp <- read_csv("00_data/raw/ATLANTIC_birds.csv") %>% 
@@ -254,7 +265,7 @@ join_birds_spp_year <- dplyr::left_join(birds_spp, birds_paper_count) %>% write_
 
 ```
 #### Medium and Large Mammals data
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 
 mlmammals_spp <- read_csv("00_data/raw/ATLANTIC_ML_mammals.csv") %>% 
@@ -286,10 +297,10 @@ join_mlmammals_spp_year <- dplyr::left_join(mlmammals_spp, mlmammals_paper_count
 
 ```
 #### joining tables
-```{r, echo=TRUE, message = FALSE, include=TRUE}
+```{r, echo=TRUE, results='hide', message = TRUE, include=TRUE}
 
 
-all_data <- rbind(join_ant_spp_year, join_butterflies_spp_year, join_amphibians_spp_year, join_smallmammals_spp_year, join_birds_spp_year, join_mlmammals_spp_year) %>% 
+all_data <- rbind(join_butterflies_spp_year, join_amphibians_spp_year, join_smallmammals_spp_year, join_birds_spp_year, join_mlmammals_spp_year) %>% 
   group_by(publised_year) %>% 
   summarise(total_s = sum(total_s),
             total_p = sum(total_p)) %>% 
